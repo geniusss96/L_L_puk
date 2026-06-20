@@ -7,6 +7,25 @@
   --profi-bg: #f9fbfd;
   --profi-text: #333333;
   --profi-light: #ffffff;
+  --profi-border: #f0f0f0;
+  --profi-table-header: #f8f9fa;
+  --profi-table-hover: #f1f5f9;
+  --profi-table-border: #eee;
+  --profi-input-border: #ddd;
+}
+
+[data-theme='dark'] {
+  --profi-primary: #ff7651;
+  --profi-primary-hover: #ff5a2c;
+  --profi-secondary: #657ec9; /* Lighter blue for dark mode */
+  --profi-bg: #121212;
+  --profi-text: #f0f0f0;
+  --profi-light: #1e1e1e; /* Card backgrounds */
+  --profi-border: #333333;
+  --profi-table-header: #2c2c2c;
+  --profi-table-hover: #2a2a2a;
+  --profi-table-border: #333333;
+  --profi-input-border: #444444;
 }
 
 body {
@@ -16,6 +35,7 @@ body {
   color: var(--profi-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 h1, h2, h3, h4, h5, h6 {
