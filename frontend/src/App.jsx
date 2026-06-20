@@ -65,8 +65,65 @@ const t = {
   }
 }
 
+const INITIAL_DATASET = `Quincy Jones,Michael Jackson
+Paul McCartney,Michael Jackson
+Diana Ross,Michael Jackson
+Stevie Wonder,Michael Jackson
+Janet Jackson,Michael Jackson
+Sony Music,Michael Jackson
+Epic Records,Michael Jackson
+MTV,Michael Jackson
+John Landis,Michael Jackson
+Slash,Michael Jackson
+Eddie Van Halen,Michael Jackson
+Brooke Shields,Michael Jackson
+Elizabeth Taylor,Michael Jackson
+Bubbles The Chimp,Michael Jackson
+Neverland Ranch,Michael Jackson
+Teddy Riley,Michael Jackson
+Lionel Richie,Michael Jackson
+Ivanka Trump,Donald Trump
+Melania Trump,Donald Trump
+Fox News,Donald Trump
+Rudy Giuliani,Donald Trump
+Mike Pence,Donald Trump
+Steve Bannon,Donald Trump
+Jared Kushner,Donald Trump
+Trump Organization,Donald Trump
+NBC,Donald Trump
+Vince McMahon,Donald Trump
+Don King,Donald Trump
+Sean Hannity,Donald Trump
+Tucker Carlson,Donald Trump
+Elon Musk,Donald Trump
+Mar-a-Lago,Donald Trump
+Roger Stone,Donald Trump
+Kellyanne Conway,Donald Trump
+Macaulay Culkin,Michael Jackson
+Macaulay Culkin,Donald Trump
+Oprah Winfrey,Michael Jackson
+Oprah Winfrey,Donald Trump
+Larry King,Michael Jackson
+Larry King,Donald Trump
+Princess Diana,Michael Jackson
+Princess Diana,Donald Trump
+Madonna,Michael Jackson
+Madonna,Donald Trump
+Bill Clinton,Michael Jackson
+Bill Clinton,Donald Trump
+Al Sharpton,Michael Jackson
+Al Sharpton,Donald Trump
+Pepsi,Michael Jackson
+Pepsi,Donald Trump
+Andy Warhol,Michael Jackson
+Andy Warhol,Donald Trump
+Nelson Mandela,Michael Jackson
+Nelson Mandela,Donald Trump
+Mike Tyson,Michael Jackson
+Mike Tyson,Donald Trump`;
+
 function App() {
-  const [edgesInput, setEdgesInput] = useState('user1,user2\nuser2,user3\nuser3,user1\nuser4,user2\nuser5,user1');
+  const [edgesInput, setEdgesInput] = useState(INITIAL_DATASET);
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -304,7 +361,7 @@ function App() {
                 width={dimensions.width - 60}
                 height={dimensions.height}
                 graphData={results.graph_data}
-                nodeAutoColorBy="id"
+                nodeAutoColorBy="group"
                 nodeVal={node => node.val || 1}
                 nodeLabel="id"
                 linkColor={() => theme === 'dark' ? '#444' : '#ccc'}

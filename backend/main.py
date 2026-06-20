@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import networkx as nx
+import networkx.algorithms.community as nx_comm
 import pandas as pd
 from typing import List, Dict, Any
 import os
@@ -89,8 +90,19 @@ def calculate_pagerank(data: GraphData):
                 top_score=float(result[0]['score'])
             ))
             
-    # 5. Format graph data for visualization (limit to 500 nodes/edges for performance)
-    viz_nodes = [{"id": node, "val": score * 100} for node, score in list(pagerank_scores.items())[:500]]
+    # 5. Community Detection for Clustering
+    try:
+        undirected_G = G.to_undirected()
+        communities = nx_comm.greedy_modularity_communities(undirected_G)
+        node_groups = {}
+        for i, comm in enumerate(communities):
+            for node in comm:
+                node_groups[node] = i
+    except Exception:
+        node_groups = {node: 0 for node in G.nodes()}
+
+    # 6. Format graph data for visualization (limit to 500 nodes/edges for performance)
+    viz_nodes = [{"id": node, "val": score * 100, "group": node_groups.get(node, 0)} for node, score in list(pagerank_scores.items())[:500]]
     viz_links = [{"source": u, "target": v} for u, v in list(G.edges())[:500]]
 
     return {
