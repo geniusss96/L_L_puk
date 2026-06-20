@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
+import ForceGraph2D from 'react-force-graph-2d'
 import './App.css'
 
 const t = {
@@ -6,7 +7,7 @@ const t = {
     heroTitle: "TAKE A STEP INTO THE FUTURE WITH US!",
     heroSub: "Our goal is to prepare graduates who can think critically in all directions through education. Analyze the social graph and find the true influencers using the PageRank algorithm.",
     card1Title: "Network Connections",
-    card1Desc: "Enter connections as source,target (one per line). This simulates users subscribing to other users.",
+    card1Desc: "Enter connections as source,target (one per line) or upload a CSV/TXT file.",
     calcBtn: "Calculate PageRank",
     calculating: "Calculating...",
     card2Title: "PageRank Results",
@@ -14,14 +15,19 @@ const t = {
     edges: "Total Edges:",
     rank: "Rank",
     node: "User Node",
-    score: "PageRank Score",
-    noResults: "No results yet. Enter data and click calculate."
+    score: "Score",
+    noResults: "No results yet. Enter data and click calculate.",
+    uploadBtn: "Upload File (.csv, .txt)",
+    settings: "Algorithm Settings",
+    alpha: "Damping Factor (α)",
+    iter: "Max Iterations",
+    graphTab: "Interactive Graph"
   },
   ru: {
     heroTitle: "СДЕЛАЙ ШАГ В БУДУЩЕЕ ВМЕСТЕ С НАМИ!",
     heroSub: "Наша цель — подготовить выпускников, способных критически мыслить во всех направлениях. Проанализируйте социальный граф и найдите истинных лидеров мнений с помощью алгоритма PageRank.",
     card1Title: "Сетевые связи",
-    card1Desc: "Введите связи в формате source,target (по одной на строку). Это симулирует подписку пользователей друг на друга.",
+    card1Desc: "Введите связи как source,target или загрузите CSV/TXT файл.",
     calcBtn: "Рассчитать PageRank",
     calculating: "Вычисляется...",
     card2Title: "Результаты PageRank",
@@ -29,23 +35,33 @@ const t = {
     edges: "Всего связей:",
     rank: "Ранг",
     node: "Пользователь",
-    score: "Оценка PageRank",
-    noResults: "Пока нет результатов. Введите данные и нажмите рассчитать."
+    score: "Оценка",
+    noResults: "Пока нет результатов. Введите данные и нажмите рассчитать.",
+    uploadBtn: "Загрузить файл (.csv, .txt)",
+    settings: "Настройки алгоритма",
+    alpha: "Коэффициент затухания (α)",
+    iter: "Макс. итераций",
+    graphTab: "Интерактивный Граф"
   },
   uz: {
     heroTitle: "BIZ BILAN KELAJAKKA QADAM QO'YING!",
-    heroSub: "Bizning maqsadimiz – barcha yo'nalishlarda tanqidiy fikrlay oladigan bitiruvchilarni tayyorlash. Ijtimoiy grafni tahlil qiling va PageRank algoritmi yordamida haqiqiy yetakchilarni toping.",
+    heroSub: "Bizning maqsadimiz – barcha yo'nalishlarda tanqidiy fikrlay oladigan bitiruvchilarni tayyorlash. Ijtimoiy grafni tahlil qiling va haqiqiy yetakchilarni toping.",
     card1Title: "Tarmoq aloqalari",
-    card1Desc: "Aloqalarni source,target formatida kiriting (har bir qatorga bittadan). Bu foydalanuvchilarning bir-biriga obuna bo'lishini simulyatsiya qiladi.",
+    card1Desc: "Aloqalarni source,target formatida kiriting yoki CSV/TXT yuklang.",
     calcBtn: "PageRank-ni hisoblash",
     calculating: "Hisoblanmoqda...",
-    card2Title: "PageRank natijalari",
+    card2Title: "Natijalar",
     nodes: "Jami tugunlar:",
     edges: "Jami aloqalar:",
     rank: "Daraja",
     node: "Foydalanuvchi",
-    score: "PageRank bahosi",
-    noResults: "Hozircha natijalar yo'q. Ma'lumotlarni kiriting va hisoblashni bosing."
+    score: "Bahosi",
+    noResults: "Hozircha natijalar yo'q.",
+    uploadBtn: "Fayl yuklash (.csv, .txt)",
+    settings: "Algoritm sozlamalari",
+    alpha: "So'nish koeffitsienti (α)",
+    iter: "Maks. iteratsiyalar",
+    graphTab: "Interaktiv Graf"
   }
 }
 
@@ -55,9 +71,15 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Default theme and language
+  const [alpha, setAlpha] = useState(0.85);
+  const [maxIter, setMaxIter] = useState(100);
+
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const [lang, setLang] = useState(localStorage.getItem('lang') || 'en');
+
+  const fileInputRef = useRef(null);
+  const containerRef = useRef(null);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 400 });
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -70,8 +92,37 @@ function App() {
     localStorage.setItem('lang', lang);
   }, [lang]);
 
+  useEffect(() => {
+    if (containerRef.current) {
+      setDimensions({
+        width: containerRef.current.offsetWidth,
+        height: 500
+      });
+    }
+    const handleResize = () => {
+      if (containerRef.current) {
+        setDimensions({
+          width: containerRef.current.offsetWidth,
+          height: 500
+        });
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [results]);
+
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      setEdgesInput(evt.target.result);
+    };
+    reader.readAsText(file);
   };
 
   const handleCalculate = async () => {
@@ -88,7 +139,7 @@ function App() {
       const response = await fetch(`${API_URL}/calculate_pagerank`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ edges })
+        body: JSON.stringify({ edges, alpha: parseFloat(alpha), max_iter: parseInt(maxIter) })
       });
 
       if (!response.ok) {
@@ -104,12 +155,16 @@ function App() {
     }
   };
 
+  const maxScore = useMemo(() => {
+    if (!results || !results.top_10.length) return 1;
+    return results.top_10[0].score;
+  }, [results]);
+
   return (
     <div className="app-container">
       <header className="header">
         <div className="logo-text">
-          <span className="logo-accent">| |</span>
-          <span>Profi University</span>
+          <img src="/logo.png" alt="Logo" style={{height: '40px', objectFit: 'contain'}} />
         </div>
         
         <div className="header-controls">
@@ -137,14 +192,50 @@ function App() {
       <main className="main-content">
         <div className="card">
           <h2>{t[lang].card1Title}</h2>
-          <p style={{marginBottom: '15px', color: 'var(--profi-text)', opacity: 0.7, fontSize: '14px'}}>
-            {t[lang].card1Desc}
-          </p>
+          
+          <div className="settings-panel">
+            <div className="setting-group">
+              <label>{t[lang].alpha}: {alpha}</label>
+              <input 
+                type="range" 
+                min="0.1" max="0.99" step="0.01" 
+                value={alpha} 
+                onChange={(e) => setAlpha(e.target.value)} 
+              />
+            </div>
+            <div className="setting-group">
+              <label>{t[lang].iter}: {maxIter}</label>
+              <input 
+                type="number" 
+                min="10" max="500" 
+                value={maxIter} 
+                onChange={(e) => setMaxIter(e.target.value)} 
+              />
+            </div>
+          </div>
+
+          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px'}}>
+            <p style={{margin: 0, color: 'var(--profi-text)', opacity: 0.7, fontSize: '14px'}}>
+              {t[lang].card1Desc}
+            </p>
+            <label className="upload-btn">
+              {t[lang].uploadBtn}
+              <input 
+                type="file" 
+                accept=".csv,.txt" 
+                style={{display: 'none'}} 
+                ref={fileInputRef}
+                onChange={handleFileUpload} 
+              />
+            </label>
+          </div>
+
           <textarea 
             value={edgesInput}
             onChange={(e) => setEdgesInput(e.target.value)}
             placeholder="userA,userB"
           ></textarea>
+          
           <button 
             className="btn-primary" 
             onClick={handleCalculate}
@@ -167,21 +258,31 @@ function App() {
                   <tr>
                     <th>{t[lang].rank}</th>
                     <th>{t[lang].node}</th>
-                    <th>{t[lang].score}</th>
+                    <th style={{width: '40%'}}>{t[lang].score}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {results.top_10.map((item, index) => (
-                    <tr key={item.node}>
-                      <td>
-                        <span className={`rank-badge ${index === 0 ? 'rank-1' : ''}`}>
-                          #{index + 1}
-                        </span>
-                      </td>
-                      <td style={{fontWeight: '600'}}>{item.node}</td>
-                      <td>{item.score.toFixed(4)}</td>
-                    </tr>
-                  ))}
+                  {results.top_10.map((item, index) => {
+                    const percent = (item.score / maxScore) * 100;
+                    return (
+                      <tr key={item.node}>
+                        <td>
+                          <span className={`rank-badge ${index === 0 ? 'rank-1' : ''}`}>
+                            #{index + 1}
+                          </span>
+                        </td>
+                        <td style={{fontWeight: '600'}}>{item.node}</td>
+                        <td>
+                          <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                            <span>{item.score.toFixed(4)}</span>
+                            <div className="progress-bg">
+                              <div className="progress-fill" style={{width: `${percent}%`}}></div>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -192,6 +293,26 @@ function App() {
           )}
         </div>
       </main>
+
+      {results && results.graph_data && (
+        <section className="graph-section" ref={containerRef}>
+          <div className="card" style={{margin: '0 40px 40px 40px'}}>
+            <h2>{t[lang].graphTab}</h2>
+            <div className="graph-container" style={{background: theme === 'dark' ? '#0a0a0a' : '#f9fbfd'}}>
+              <ForceGraph2D
+                width={dimensions.width - 60}
+                height={dimensions.height}
+                graphData={results.graph_data}
+                nodeAutoColorBy="id"
+                nodeVal={node => node.val || 1}
+                nodeLabel="id"
+                linkColor={() => theme === 'dark' ? '#444' : '#ccc'}
+                backgroundColor={theme === 'dark' ? '#0a0a0a' : '#f9fbfd'}
+              />
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   )
 }

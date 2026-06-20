@@ -46,6 +46,8 @@ class Edge(BaseModel):
 
 class GraphData(BaseModel):
     edges: List[Edge]
+    alpha: float = 0.85
+    max_iter: int = 100
 
 @app.get("/")
 def read_root():
@@ -63,9 +65,9 @@ def calculate_pagerank(data: GraphData):
     edge_list = [(edge.source, edge.target) for edge in data.edges]
     G.add_edges_from(edge_list)
     
-    # 3. Calculate PageRank (d = 0.85)
+    # 3. Calculate PageRank
     try:
-        pagerank_scores = nx.pagerank(G, alpha=0.85, max_iter=100)
+        pagerank_scores = nx.pagerank(G, alpha=data.alpha, max_iter=data.max_iter)
     except nx.PowerIterationFailedConvergence:
         raise HTTPException(status_code=500, detail="PageRank did not converge")
     
@@ -87,10 +89,18 @@ def calculate_pagerank(data: GraphData):
                 top_score=float(result[0]['score'])
             ))
             
+    # 5. Format graph data for visualization (limit to 500 nodes/edges for performance)
+    viz_nodes = [{"id": node, "val": score * 100} for node, score in list(pagerank_scores.items())[:500]]
+    viz_links = [{"source": u, "target": v} for u, v in list(G.edges())[:500]]
+
     return {
         "nodes": G.number_of_nodes(),
         "edges": G.number_of_edges(),
-        "top_10": result
+        "top_10": result,
+        "graph_data": {
+            "nodes": viz_nodes,
+            "links": viz_links
+        }
     }
 
 if __name__ == "__main__":
