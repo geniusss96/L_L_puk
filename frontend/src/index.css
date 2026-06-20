@@ -1,0 +1,34 @@
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600&display=swap');
+
+:root {
+  --profi-primary: #ff5a2c;
+  --profi-primary-hover: #e04b22;
+  --profi-secondary: #1c2a59;
+  --profi-bg: #f9fbfd;
+  --profi-text: #333333;
+  --profi-light: #ffffff;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background-color: var(--profi-bg);
+  color: var(--profi-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Merriweather', serif;
+  color: var(--profi-secondary);
+  margin-top: 0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button {
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+}

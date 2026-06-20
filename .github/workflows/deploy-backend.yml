@@ -1,0 +1,41 @@
+name: Backend CI & Deploy
+
+on:
+  push:
+    branches: [ "main", "master" ]
+    paths:
+      - 'backend/**'
+  pull_request:
+    paths:
+      - 'backend/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      # Uncomment when you add tests
+      # - name: Run tests
+      #   run: pytest 
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    steps:
+      - name: Trigger Render Deploy Hook
+        run: |
+          if [ -n "${{ secrets.RENDER_DEPLOY_HOOK }}" ]; then
+            curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
+          else
+            echo "RENDER_DEPLOY_HOOK is not set in GitHub Secrets. Skipping deploy trigger."
+          fi
