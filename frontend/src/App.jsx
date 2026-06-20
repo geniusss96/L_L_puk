@@ -165,6 +165,7 @@ function App() {
       <header className="header">
         <div className="logo-text">
           <img src="/logo.png" alt="Logo" style={{height: '40px', objectFit: 'contain'}} />
+          <span style={{marginLeft: '12px'}}>Profi University</span>
         </div>
         
         <div className="header-controls">
