@@ -363,7 +363,22 @@ function App() {
                 graphData={results.graph_data}
                 nodeAutoColorBy="group"
                 nodeVal={node => node.val || 1}
-                nodeLabel="id"
+                nodeCanvasObject={(node, ctx, globalScale) => {
+                  const label = node.id;
+                  const fontSize = 14 / globalScale;
+                  ctx.font = `${fontSize}px Sans-Serif`;
+                  const r = Math.sqrt(Math.max(0, node.val || 1)) * 4;
+                  
+                  ctx.beginPath();
+                  ctx.arc(node.x, node.y, r, 0, 2 * Math.PI, false);
+                  ctx.fillStyle = node.color || '#ccc';
+                  ctx.fill();
+
+                  ctx.textAlign = 'center';
+                  ctx.textBaseline = 'top';
+                  ctx.fillStyle = theme === 'dark' ? '#eeeeee' : '#222222';
+                  ctx.fillText(label, node.x, node.y + r + 2/globalScale);
+                }}
                 linkColor={() => theme === 'dark' ? '#444' : '#ccc'}
                 backgroundColor={theme === 'dark' ? '#0a0a0a' : '#f9fbfd'}
               />
